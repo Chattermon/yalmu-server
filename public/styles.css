@@ -449,6 +449,8 @@
             border: 1px solid #ccc;
             border-radius: 5px;
             font-size: 1em;
+            font-family: "Reddit Sans", sans-serif;
+
         }
 
         .post-form button {
