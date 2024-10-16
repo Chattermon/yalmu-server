@@ -29,11 +29,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Connect to MongoDB
 mongoose
     .connect(process.env.MONGODB_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
+        // Remove deprecated options
     })
     .then(() => console.log('MongoDB connected'))
-    .catch((err) => console.error(err));
+    .catch((err) => console.error('MongoDB connection error:', err));
 
 // Routes
 const postsRoute = require('./routes/posts');
