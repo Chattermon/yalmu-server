@@ -25,17 +25,14 @@ router.post('/', async (req, res) => {
     }
 
     try {
-        // Prepare inputs for moderation
-        const inputs = [
-            { input: title },
-            { input: content }
-        ];
+        // Prepare inputs for moderation as an array of strings
+        const inputs = [title, content];
 
         // Send both title and content to OpenAI Moderation API
         const moderationResponse = await axios.post(
             'https://api.openai.com/v1/moderations',
             {
-                inputs: inputs,
+                input: inputs,
                 model: 'text-moderation-latest',
             },
             {
