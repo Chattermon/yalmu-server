@@ -68,7 +68,7 @@ function displayPost(post, isNewPost = false) {
     const postHeader = document.createElement('div');
     postHeader.classList.add('post-header');
     postHeader.innerHTML = `
-        <img src="alluoo-icon.png" alt="Alluoo">
+        <img src="Unknown.jpeg" alt="Alluoo">
         Posted on Alluoo
     `;
 
