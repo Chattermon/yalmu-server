@@ -50,7 +50,7 @@ io.on('connection', (socket) => {
     // Listen for chat messages
     socket.on('chatMessage', (msg) => {
         // Broadcast the message to all clients
-        io.emit('chatMessage', msg);
+        socket.broadcast.emit('chatMessage', msg);
     });
 
     // Handle disconnection
