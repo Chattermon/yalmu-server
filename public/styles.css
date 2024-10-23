@@ -260,6 +260,7 @@
         .post-header img {
             width: 20px;
             margin-right: 10px;
+            border-radius: 45px;
         }
         .post-title {
             font-size: 1.2em;
