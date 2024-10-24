@@ -1,22 +1,127 @@
+// app.js
+
 // Initialize Socket.io
 const socket = io();
+
+// Placeholder for user information (replace with actual user data)
+window.username = window.username || 'Anonymous';
+window.userAvatar = window.userAvatar || 'https://i.pravatar.cc/40?u=' + window.username;
+
+// Event listener for the submit post button
+document.getElementById('submitPost').addEventListener('click', submitPost);
+
+// Fetch and display existing posts on page load
+window.onload = fetchPosts;
 
 // Function to fetch and display existing posts
 async function fetchPosts() {
     try {
         const response = await fetch('/api/posts');
         const posts = await response.json();
-
-        const postsContainer = document.getElementById('postsContainer');
-        postsContainer.innerHTML = '';
-
-        posts.forEach((post) => {
-            displayPost(post);
-        });
+        displayPosts(posts);
     } catch (error) {
         console.error('Error fetching posts:', error);
         alert('Failed to load posts. Please try again later.');
     }
+}
+
+// Function to display posts
+function displayPosts(posts) {
+    const postsContainer = document.getElementById('postsContainer');
+    postsContainer.innerHTML = ''; // Clear existing posts
+
+    posts.forEach((post) => {
+        const postElement = createPostElement(post);
+        postsContainer.appendChild(postElement);
+    });
+}
+
+// Function to create a post element
+function createPostElement(post) {
+    const postSection = document.createElement('div');
+    postSection.classList.add('post-section');
+    postSection.dataset.postId = post._id;
+
+    // Post Header
+    const postHeader = document.createElement('div');
+    postHeader.classList.add('post-header');
+
+    const authorAvatar = document.createElement('img');
+    authorAvatar.src = post.authorAvatar || 'default-avatar.png';
+    authorAvatar.alt = post.author;
+
+    const headerText = document.createElement('div');
+
+    const postTitle = document.createElement('div');
+    postTitle.classList.add('post-title');
+    postTitle.textContent = post.title;
+
+    const postAuthor = document.createElement('div');
+    postAuthor.classList.add('post-author');
+    postAuthor.textContent = `Posted by ${post.author}`;
+
+    headerText.appendChild(postTitle);
+    headerText.appendChild(postAuthor);
+
+    postHeader.appendChild(authorAvatar);
+    postHeader.appendChild(headerText);
+
+    // Post Content
+    const postContent = document.createElement('div');
+    postContent.classList.add('post-content');
+    postContent.textContent = post.content;
+
+    // Post Actions
+    const postActions = document.createElement('div');
+    postActions.classList.add('post-actions');
+
+    const upvoteButton = document.createElement('button');
+    upvoteButton.classList.add('upvote-button');
+    upvoteButton.textContent = `Upvote (${post.upvotes})`;
+    upvoteButton.addEventListener('click', () => handleUpvote(post._id, upvoteButton, downvoteButton));
+
+    const downvoteButton = document.createElement('button');
+    downvoteButton.classList.add('downvote-button');
+    downvoteButton.textContent = `Downvote (${post.downvotes})`;
+    downvoteButton.addEventListener('click', () => handleDownvote(post._id, upvoteButton, downvoteButton));
+
+    postActions.appendChild(upvoteButton);
+    postActions.appendChild(downvoteButton);
+
+    // Comments Section
+    const postComments = document.createElement('div');
+    postComments.classList.add('post-comments');
+
+    // Load comments
+    loadComments(post._id, postComments);
+
+    // Comment Form
+    const commentForm = document.createElement('div');
+    commentForm.classList.add('comment-form');
+
+    const commentInput = document.createElement('input');
+    commentInput.type = 'text';
+    commentInput.classList.add('comment-input');
+    commentInput.placeholder = 'Add a comment...';
+
+    const submitCommentButton = document.createElement('button');
+    submitCommentButton.classList.add('submit-comment');
+    submitCommentButton.textContent = 'Comment';
+    submitCommentButton.addEventListener('click', () => {
+        handleSubmitComment(post._id, commentInput, postComments);
+    });
+
+    commentForm.appendChild(commentInput);
+    commentForm.appendChild(submitCommentButton);
+
+    // Assemble Post Section
+    postSection.appendChild(postHeader);
+    postSection.appendChild(postContent);
+    postSection.appendChild(postActions);
+    postSection.appendChild(postComments);
+    postSection.appendChild(commentForm);
+
+    return postSection;
 }
 
 // Function to submit a new post
@@ -31,7 +136,7 @@ async function submitPost() {
         return;
     }
 
-    const newPost = { title, content, author, authorAvatar };
+    const postData = { title, content, author, authorAvatar };
 
     try {
         const response = await fetch('/api/posts', {
@@ -39,15 +144,16 @@ async function submitPost() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(newPost),
+            body: JSON.stringify(postData),
         });
 
         const data = await response.json();
 
         if (response.status === 201) {
-            displayPost(data, true);
             document.getElementById('postTitle').value = '';
             document.getElementById('postContent').value = '';
+            // Reload posts
+            fetchPosts();
         } else {
             alert(data.message || 'Failed to submit post.');
         }
@@ -57,81 +163,105 @@ async function submitPost() {
     }
 }
 
-// Function to display a single post
-function displayPost(post, isNewPost = false) {
-    const postsContainer = document.getElementById('postsContainer');
-
-    // Create post elements
-    const postSection = document.createElement('div');
-    postSection.classList.add('post-section');
-
-    const postHeader = document.createElement('div');
-    postHeader.classList.add('post-header');
-    postHeader.innerHTML = `
-        <img src="Unknown.jpeg" alt="Alluoo">
-        Posted on Alluoo
-    `;
-
-    const postTitle = document.createElement('div');
-    postTitle.classList.add('post-title');
-    postTitle.textContent = post.title;
-
-    const postContent = document.createElement('div');
-    postContent.classList.add('post-content');
-    postContent.textContent = post.content;
-
-    const postAuthor = document.createElement('div');
-    postAuthor.classList.add('post-author');
-    postAuthor.innerHTML = `
-        <img src="${post.authorAvatar}" alt="${post.author}'s avatar">
-        <div>${post.author}</div>
-    `;
-
-    const postTimeAgo = document.createElement('div');
-    postTimeAgo.classList.add('post-time-ago');
-    postTimeAgo.textContent = timeSince(new Date(post.timestamp)) + ' ago';
-
-    // Append elements to the post section
-    postSection.appendChild(postHeader);
-    postSection.appendChild(postTitle);
-    postSection.appendChild(postContent);
-    postSection.appendChild(postAuthor);
-    postSection.appendChild(postTimeAgo);
-
-    if (isNewPost) {
-        // Insert the new post at the top
-        postsContainer.insertBefore(postSection, postsContainer.firstChild);
-    } else {
-        // Append the post to the container
-        postsContainer.appendChild(postSection);
+// Handle Upvote
+async function handleUpvote(postId, upvoteButton, downvoteButton) {
+    try {
+        const response = await fetch(`/api/posts/${postId}/upvote`, { method: 'POST' });
+        const data = await response.json();
+        upvoteButton.textContent = `Upvote (${data.upvotes})`;
+        downvoteButton.textContent = `Downvote (${data.downvotes})`;
+    } catch (error) {
+        console.error('Error upvoting post:', error);
     }
 }
 
-// Function to calculate time since the post was made
-function timeSince(date) {
-    const seconds = Math.floor((new Date() - date) / 1000);
-    let interval = Math.floor(seconds / 31536000);
+// Handle Downvote
+async function handleDownvote(postId, upvoteButton, downvoteButton) {
+    try {
+        const response = await fetch(`/api/posts/${postId}/downvote`, { method: 'POST' });
+        const data = await response.json();
+        upvoteButton.textContent = `Upvote (${data.upvotes})`;
+        downvoteButton.textContent = `Downvote (${data.downvotes})`;
+    } catch (error) {
+        console.error('Error downvoting post:', error);
+    }
+}
 
-    if (interval >= 1) {
-        return interval + ' year' + (interval > 1 ? 's' : '');
+// Load Comments
+async function loadComments(postId, postComments) {
+    try {
+        const response = await fetch(`/api/posts/${postId}/comments`);
+        const comments = await response.json();
+        postComments.innerHTML = ''; // Clear existing comments
+
+        comments.forEach((comment) => {
+            const commentElement = createCommentElement(comment);
+            postComments.appendChild(commentElement);
+        });
+    } catch (error) {
+        console.error('Error loading comments:', error);
     }
-    interval = Math.floor(seconds / 2592000);
-    if (interval >= 1) {
-        return interval + ' month' + (interval > 1 ? 's' : '');
+}
+
+// Create Comment Element
+function createCommentElement(comment) {
+    const commentDiv = document.createElement('div');
+    commentDiv.classList.add('comment');
+
+    const commenterAvatar = document.createElement('img');
+    commenterAvatar.src = comment.authorAvatar || 'default-avatar.png';
+    commenterAvatar.alt = comment.author;
+
+    const commentContent = document.createElement('div');
+    commentContent.classList.add('comment-content');
+
+    const commentAuthor = document.createElement('div');
+    commentAuthor.classList.add('comment-author');
+    commentAuthor.textContent = comment.author;
+
+    const commentText = document.createElement('div');
+    commentText.classList.add('comment-text');
+    commentText.textContent = comment.content;
+
+    commentContent.appendChild(commentAuthor);
+    commentContent.appendChild(commentText);
+
+    commentDiv.appendChild(commenterAvatar);
+    commentDiv.appendChild(commentContent);
+
+    return commentDiv;
+}
+
+// Handle Submit Comment
+async function handleSubmitComment(postId, commentInput, postComments) {
+    const content = commentInput.value.trim();
+    if (!content) return;
+
+    const commentData = {
+        author: window.username,
+        authorAvatar: window.userAvatar,
+        content,
+    };
+
+    try {
+        const response = await fetch(`/api/posts/${postId}/comments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(commentData),
+        });
+
+        if (response.ok) {
+            commentInput.value = '';
+            // Reload comments
+            loadComments(postId, postComments);
+        } else {
+            const error = await response.json();
+            console.error('Error adding comment:', error.message);
+            alert('Error: ' + error.message);
+        }
+    } catch (error) {
+        console.error('Error adding comment:', error);
     }
-    interval = Math.floor(seconds / 86400);
-    if (interval >= 1) {
-        return interval + ' day' + (interval > 1 ? 's' : '');
-    }
-    interval = Math.floor(seconds / 3600);
-    if (interval >= 1) {
-        return interval + ' hour' + (interval > 1 ? 's' : '');
-    }
-    interval = Math.floor(seconds / 60);
-    if (interval >= 1) {
-        return interval + ' minute' + (interval > 1 ? 's' : '');
-    }
-    return Math.floor(seconds) + ' second' + (seconds > 1 ? 's' : '');
 }
 
 // Chat Functionality
@@ -280,9 +410,3 @@ document.addEventListener('click', function(event) {
 verticalNavbarContainer.addEventListener('click', function(event) {
     event.stopPropagation();
 });
-
-// Event listener for the submit post button
-document.getElementById('submitPost').addEventListener('click', submitPost);
-
-// Initial fetch of posts when the page loads
-window.onload = fetchPosts;

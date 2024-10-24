@@ -13,10 +13,10 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: {
-        origin: '*', // Update with your frontend URL in production
-        methods: ['GET', 'POST'],
-    },
+  cors: {
+    origin: '*', // Update with your frontend URL in production
+    methods: ['GET', 'POST'],
+  },
 });
 
 // Middleware
@@ -28,11 +28,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Connect to MongoDB
 mongoose
-    .connect(process.env.MONGODB_URI, {
-        // Remove deprecated options
-    })
-    .then(() => console.log('MongoDB connected'))
-    .catch((err) => console.error('MongoDB connection error:', err));
+  .connect(process.env.MONGODB_URI, {
+    // Use the new URL parser and unified topology
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log('MongoDB connected'))
+  .catch((err) => console.error('MongoDB connection error:', err));
 
 // Routes
 const postsRoute = require('./routes/posts');
@@ -40,23 +42,23 @@ app.use('/api/posts', postsRoute);
 
 // Serve index.html for all other routes (Single Page Applications)
 app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
+  res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
 });
 
 // Real-Time Chat with Socket.io
 io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
+  console.log('A user connected:', socket.id);
 
-    // Listen for chat messages
-    socket.on('chatMessage', (msg) => {
-        // Broadcast the message to all clients
-        socket.broadcast.emit('chatMessage', msg);
-    });
+  // Listen for chat messages
+  socket.on('chatMessage', (msg) => {
+    // Broadcast the message to all clients
+    socket.broadcast.emit('chatMessage', msg);
+  });
 
-    // Handle disconnection
-    socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
-    });
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
 });
 
 const PORT = process.env.PORT || 5000;
