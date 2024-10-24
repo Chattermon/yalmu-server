@@ -299,31 +299,37 @@ body {
     color: #555;
 }
 
-.post-header .avatar {
+/* Header Left */
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.header-left .avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
     margin-right: 10px;
 }
 
-.post-header .author-info {
+.header-left .author-info {
     display: flex;
     align-items: center;
     font-size: 0.9em;
     color: #555;
 }
 
-.post-header .post-author {
+.header-left .post-author {
     font-weight: bold;
     margin-right: 5px;
 }
 
-.post-header .dot-separator {
+.header-left .dot-separator {
     margin: 0 5px;
     color: #888;
 }
 
-.post-header .post-time {
+.header-left .post-time {
     color: #888;
 }
 
@@ -340,6 +346,7 @@ body {
     margin-bottom: 10px;
     font-size: 1em;
     color: #333;
+    line-height: 1.5;
 }
 
 /* Upvote/Downvote Buttons */

@@ -122,12 +122,6 @@ function createPostElement(post) {
     postActions.appendChild(upvoteButton);
     postActions.appendChild(downvoteButton);
 
-    // Assemble Post Section
-    postSection.appendChild(postHeader);
-    postSection.appendChild(postTitle);
-    postSection.appendChild(postContent);
-    postSection.appendChild(postActions);
-
     // Comments Section
     const postComments = document.createElement('div');
     postComments.classList.add('post-comments');
@@ -154,6 +148,11 @@ function createPostElement(post) {
     commentForm.appendChild(commentInput);
     commentForm.appendChild(submitCommentButton);
 
+    // Assemble Post Section
+    postSection.appendChild(postHeader);
+    postSection.appendChild(postTitle);
+    postSection.appendChild(postContent);
+    postSection.appendChild(postActions);
     postSection.appendChild(postComments);
     postSection.appendChild(commentForm);
 
