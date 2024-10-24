@@ -13,6 +13,14 @@ document.getElementById('submitPost').addEventListener('click', submitPost);
 // Fetch and display existing posts on page load
 window.onload = fetchPosts;
 
+// Store user votes in localStorage
+let userVotes = JSON.parse(localStorage.getItem('userVotes')) || { posts: {}, comments: {} };
+
+// Function to update localStorage
+function saveUserVotes() {
+    localStorage.setItem('userVotes', JSON.stringify(userVotes));
+}
+
 // Function to fetch and display existing posts
 async function fetchPosts() {
     try {
@@ -76,14 +84,24 @@ function createPostElement(post) {
     postActions.classList.add('post-actions');
 
     const upvoteButton = document.createElement('button');
-    upvoteButton.classList.add('upvote-button');
-    upvoteButton.textContent = `Upvote (${post.upvotes})`;
-    upvoteButton.addEventListener('click', () => handleUpvote(post._id, upvoteButton, downvoteButton));
+    upvoteButton.classList.add('vote-button', 'upvote-button');
+    upvoteButton.innerHTML = `<i class="far fa-thumbs-up"></i><span>${post.upvotes}</span>`;
+    upvoteButton.addEventListener('click', () => handlePostVote(post._id, 1, upvoteButton, downvoteButton));
 
     const downvoteButton = document.createElement('button');
-    downvoteButton.classList.add('downvote-button');
-    downvoteButton.textContent = `Downvote (${post.downvotes})`;
-    downvoteButton.addEventListener('click', () => handleDownvote(post._id, upvoteButton, downvoteButton));
+    downvoteButton.classList.add('vote-button', 'downvote-button');
+    downvoteButton.innerHTML = `<i class="far fa-thumbs-down"></i><span>${post.downvotes}</span>`;
+    downvoteButton.addEventListener('click', () => handlePostVote(post._id, -1, upvoteButton, downvoteButton));
+
+    // Check if the user has already voted on this post
+    const postVote = userVotes.posts[post._id];
+    if (postVote === 1) {
+        upvoteButton.classList.add('voted');
+        upvoteButton.querySelector('i').classList.replace('far', 'fas');
+    } else if (postVote === -1) {
+        downvoteButton.classList.add('voted');
+        downvoteButton.querySelector('i').classList.replace('far', 'fas');
+    }
 
     postActions.appendChild(upvoteButton);
     postActions.appendChild(downvoteButton);
@@ -163,27 +181,40 @@ async function submitPost() {
     }
 }
 
-// Handle Upvote
-async function handleUpvote(postId, upvoteButton, downvoteButton) {
-    try {
-        const response = await fetch(`/api/posts/${postId}/upvote`, { method: 'POST' });
-        const data = await response.json();
-        upvoteButton.textContent = `Upvote (${data.upvotes})`;
-        downvoteButton.textContent = `Downvote (${data.downvotes})`;
-    } catch (error) {
-        console.error('Error upvoting post:', error);
+// Handle Post Vote
+async function handlePostVote(postId, voteValue, upvoteButton, downvoteButton) {
+    if (userVotes.posts[postId]) {
+        alert('You have already voted on this post.');
+        return;
     }
-}
 
-// Handle Downvote
-async function handleDownvote(postId, upvoteButton, downvoteButton) {
+    const voteType = voteValue === 1 ? 'upvote' : 'downvote';
+
     try {
-        const response = await fetch(`/api/posts/${postId}/downvote`, { method: 'POST' });
+        const response = await fetch(`/api/posts/${postId}/${voteType}`, { method: 'POST' });
         const data = await response.json();
-        upvoteButton.textContent = `Upvote (${data.upvotes})`;
-        downvoteButton.textContent = `Downvote (${data.downvotes})`;
+
+        if (response.ok) {
+            // Update UI
+            upvoteButton.querySelector('span').textContent = data.upvotes;
+            downvoteButton.querySelector('span').textContent = data.downvotes;
+
+            if (voteValue === 1) {
+                upvoteButton.classList.add('voted');
+                upvoteButton.querySelector('i').classList.replace('far', 'fas');
+            } else {
+                downvoteButton.classList.add('voted');
+                downvoteButton.querySelector('i').classList.replace('far', 'fas');
+            }
+
+            // Save vote
+            userVotes.posts[postId] = voteValue;
+            saveUserVotes();
+        } else {
+            alert(data.message || 'Failed to vote on post.');
+        }
     } catch (error) {
-        console.error('Error downvoting post:', error);
+        console.error('Error voting on post:', error);
     }
 }
 
@@ -195,7 +226,7 @@ async function loadComments(postId, postComments) {
         postComments.innerHTML = ''; // Clear existing comments
 
         comments.forEach((comment) => {
-            const commentElement = createCommentElement(comment);
+            const commentElement = createCommentElement(comment, postId);
             postComments.appendChild(commentElement);
         });
     } catch (error) {
@@ -204,9 +235,10 @@ async function loadComments(postId, postComments) {
 }
 
 // Create Comment Element
-function createCommentElement(comment) {
+function createCommentElement(comment, postId) {
     const commentDiv = document.createElement('div');
     commentDiv.classList.add('comment');
+    commentDiv.dataset.commentId = comment._id;
 
     const commenterAvatar = document.createElement('img');
     commenterAvatar.src = comment.authorAvatar || 'default-avatar.png';
@@ -226,10 +258,76 @@ function createCommentElement(comment) {
     commentContent.appendChild(commentAuthor);
     commentContent.appendChild(commentText);
 
+    // Comment Actions
+    const commentActions = document.createElement('div');
+    commentActions.classList.add('comment-actions');
+
+    const upvoteButton = document.createElement('button');
+    upvoteButton.classList.add('vote-button', 'upvote-button');
+    upvoteButton.innerHTML = `<i class="far fa-thumbs-up"></i><span>${comment.upvotes}</span>`;
+    upvoteButton.addEventListener('click', () => handleCommentVote(postId, comment._id, 1, upvoteButton, downvoteButton));
+
+    const downvoteButton = document.createElement('button');
+    downvoteButton.classList.add('vote-button', 'downvote-button');
+    downvoteButton.innerHTML = `<i class="far fa-thumbs-down"></i><span>${comment.downvotes}</span>`;
+    downvoteButton.addEventListener('click', () => handleCommentVote(postId, comment._id, -1, upvoteButton, downvoteButton));
+
+    // Check if the user has already voted on this comment
+    const commentVote = userVotes.comments[comment._id];
+    if (commentVote === 1) {
+        upvoteButton.classList.add('voted');
+        upvoteButton.querySelector('i').classList.replace('far', 'fas');
+    } else if (commentVote === -1) {
+        downvoteButton.classList.add('voted');
+        downvoteButton.querySelector('i').classList.replace('far', 'fas');
+    }
+
+    commentActions.appendChild(upvoteButton);
+    commentActions.appendChild(downvoteButton);
+
+    commentContent.appendChild(commentActions);
+
     commentDiv.appendChild(commenterAvatar);
     commentDiv.appendChild(commentContent);
 
     return commentDiv;
+}
+
+// Handle Comment Vote
+async function handleCommentVote(postId, commentId, voteValue, upvoteButton, downvoteButton) {
+    if (userVotes.comments[commentId]) {
+        alert('You have already voted on this comment.');
+        return;
+    }
+
+    const voteType = voteValue === 1 ? 'upvote' : 'downvote';
+
+    try {
+        const response = await fetch(`/api/posts/${postId}/comments/${commentId}/${voteType}`, { method: 'POST' });
+        const data = await response.json();
+
+        if (response.ok) {
+            // Update UI
+            upvoteButton.querySelector('span').textContent = data.upvotes;
+            downvoteButton.querySelector('span').textContent = data.downvotes;
+
+            if (voteValue === 1) {
+                upvoteButton.classList.add('voted');
+                upvoteButton.querySelector('i').classList.replace('far', 'fas');
+            } else {
+                downvoteButton.classList.add('voted');
+                downvoteButton.querySelector('i').classList.replace('far', 'fas');
+            }
+
+            // Save vote
+            userVotes.comments[commentId] = voteValue;
+            saveUserVotes();
+        } else {
+            alert(data.message || 'Failed to vote on comment.');
+        }
+    } catch (error) {
+        console.error('Error voting on comment:', error);
+    }
 }
 
 // Handle Submit Comment

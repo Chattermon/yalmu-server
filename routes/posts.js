@@ -4,6 +4,16 @@ const router = express.Router();
 const Post = require('../models/Post');
 const axios = require('axios');
 
+// Middleware to simulate user authentication (replace with real auth in production)
+function fakeAuth(req, res, next) {
+  // Simulate a user ID (in a real app, you'd get this from the session or token)
+  // For simplicity, we're using the client's IP address as a unique identifier
+  req.userId = req.ip; // Note: This is not reliable for production use
+  next();
+}
+
+router.use(fakeAuth);
+
 // Fetch all posts
 router.get('/', async (req, res) => {
   try {
@@ -99,11 +109,27 @@ router.post('/', async (req, res) => {
 // Upvote a post
 router.post('/:id/upvote', async (req, res) => {
   try {
-    const post = await Post.findByIdAndUpdate(
-      req.params.id,
-      { $inc: { upvotes: 1 } },
-      { new: true }
-    );
+    const userId = req.userId;
+    const post = await Post.findById(req.params.id);
+
+    if (!post) return res.status(404).json({ message: 'Post not found.' });
+
+    if (!post.voters) post.voters = new Map();
+
+    const previousVote = post.voters.get(userId) || 0;
+
+    if (previousVote === 1) {
+      return res.status(400).json({ message: 'You have already upvoted this post.' });
+    }
+
+    // Update votes
+    post.upvotes += 1;
+    if (previousVote === -1) post.downvotes -= 1;
+
+    // Record the vote
+    post.voters.set(userId, 1);
+    await post.save();
+
     res.json({ upvotes: post.upvotes, downvotes: post.downvotes });
   } catch (error) {
     console.error('Error upvoting post:', error);
@@ -114,11 +140,27 @@ router.post('/:id/upvote', async (req, res) => {
 // Downvote a post
 router.post('/:id/downvote', async (req, res) => {
   try {
-    const post = await Post.findByIdAndUpdate(
-      req.params.id,
-      { $inc: { downvotes: 1 } },
-      { new: true }
-    );
+    const userId = req.userId;
+    const post = await Post.findById(req.params.id);
+
+    if (!post) return res.status(404).json({ message: 'Post not found.' });
+
+    if (!post.voters) post.voters = new Map();
+
+    const previousVote = post.voters.get(userId) || 0;
+
+    if (previousVote === -1) {
+      return res.status(400).json({ message: 'You have already downvoted this post.' });
+    }
+
+    // Update votes
+    post.downvotes += 1;
+    if (previousVote === 1) post.upvotes -= 1;
+
+    // Record the vote
+    post.voters.set(userId, -1);
+    await post.save();
+
     res.json({ upvotes: post.upvotes, downvotes: post.downvotes });
   } catch (error) {
     console.error('Error downvoting post:', error);
@@ -157,6 +199,8 @@ router.post('/:id/comments', async (req, res) => {
     }
 
     const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: 'Post not found.' });
+
     const newComment = {
       author,
       authorAvatar,
@@ -176,9 +220,79 @@ router.post('/:id/comments', async (req, res) => {
 router.get('/:id/comments', async (req, res) => {
   try {
     const post = await Post.findById(req.params.id).select('comments');
+    if (!post) return res.status(404).json({ message: 'Post not found.' });
+
     res.json(post.comments);
   } catch (error) {
     console.error('Error fetching comments:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
+// Upvote a comment
+router.post('/:postId/comments/:commentId/upvote', async (req, res) => {
+  try {
+    const userId = req.userId;
+    const post = await Post.findById(req.params.postId);
+
+    if (!post) return res.status(404).json({ message: 'Post not found.' });
+
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) return res.status(404).json({ message: 'Comment not found.' });
+
+    if (!comment.voters) comment.voters = new Map();
+
+    const previousVote = comment.voters.get(userId) || 0;
+
+    if (previousVote === 1) {
+      return res.status(400).json({ message: 'You have already upvoted this comment.' });
+    }
+
+    // Update votes
+    comment.upvotes += 1;
+    if (previousVote === -1) comment.downvotes -= 1;
+
+    // Record the vote
+    comment.voters.set(userId, 1);
+    await post.save();
+
+    res.json({ upvotes: comment.upvotes, downvotes: comment.downvotes });
+  } catch (error) {
+    console.error('Error upvoting comment:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
+// Downvote a comment
+router.post('/:postId/comments/:commentId/downvote', async (req, res) => {
+  try {
+    const userId = req.userId;
+    const post = await Post.findById(req.params.postId);
+
+    if (!post) return res.status(404).json({ message: 'Post not found.' });
+
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) return res.status(404).json({ message: 'Comment not found.' });
+
+    if (!comment.voters) comment.voters = new Map();
+
+    const previousVote = comment.voters.get(userId) || 0;
+
+    if (previousVote === -1) {
+      return res.status(400).json({ message: 'You have already downvoted this comment.' });
+    }
+
+    // Update votes
+    comment.downvotes += 1;
+    if (previousVote === 1) comment.upvotes -= 1;
+
+    // Record the vote
+    comment.voters.set(userId, -1);
+    await post.save();
+
+    res.json({ upvotes: comment.upvotes, downvotes: comment.downvotes });
+  } catch (error) {
+    console.error('Error downvoting comment:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 });
