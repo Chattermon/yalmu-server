@@ -3,7 +3,6 @@
 /* Global Styles */
 * {
     box-sizing: border-box;
-
 }
 
 body {
@@ -292,6 +291,7 @@ body {
     padding: 15px;
 }
 
+/* Post Header */
 .post-header {
     display: flex;
     align-items: center;
@@ -299,13 +299,35 @@ body {
     color: #555;
 }
 
-.post-header img {
-    width: 50px;
-    height: 50px;
+.post-header .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
     margin-right: 10px;
-    border-radius: 45px;
 }
 
+.post-header .author-info {
+    display: flex;
+    align-items: center;
+    font-size: 0.9em;
+    color: #555;
+}
+
+.post-header .post-author {
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.post-header .dot-separator {
+    margin: 0 5px;
+    color: #888;
+}
+
+.post-header .post-time {
+    color: #888;
+}
+
+/* Post Title */
 .post-title {
     font-size: 1.2em;
     margin-bottom: 5px;
@@ -313,12 +335,7 @@ body {
     color: #333;
 }
 
-.post-author {
-    color: #888;
-    font-size: 0.9em;
-    margin-bottom: 5px;
-}
-
+/* Post Content */
 .post-content {
     margin-bottom: 10px;
     font-size: 1em;
@@ -371,37 +388,57 @@ body {
     font-weight: bold;
 }
 
-/* Comment Section */
+/* Comments Section */
 .post-comments {
     margin-top: 15px;
 }
 
+/* Comment */
 .comment {
-    display: flex;
-    align-items: flex-start;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    margin-left: 50px;
 }
 
-.comment img {
+/* Comment Header */
+.comment-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.comment-header .avatar {
     width: 30px;
     height: 30px;
     border-radius: 50%;
     margin-right: 10px;
 }
 
-.comment-content {
-    background-color: #f0f0f0;
-    padding: 10px;
-    border-radius: 10px;
-    width: 100%;
+.comment-header .commenter-info {
+    display: flex;
+    align-items: center;
+    font-size: 0.85em;
+    color: #555;
 }
 
-.comment-author {
+.comment-header .comment-author {
     font-weight: bold;
-    margin-bottom: 5px;
+    margin-right: 5px;
 }
 
+.comment-header .dot-separator {
+    margin: 0 5px;
+    color: #888;
+}
+
+.comment-header .comment-time {
+    color: #888;
+}
+
+/* Comment Text */
 .comment-text {
+    font-size: 1em;
+    margin-bottom: 5px;
+    line-height: 1.5;
     color: #333;
 }
 
@@ -413,6 +450,7 @@ body {
     margin-top: 5px;
 }
 
+/* Comment Form */
 .comment-form {
     display: flex;
     align-items: center;
@@ -657,7 +695,7 @@ body {
     }
 
     .post-author,
-    .post-time-ago {
+    .post-time {
         font-size: 1em;
     }
 

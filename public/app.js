@@ -54,25 +54,42 @@ function createPostElement(post) {
     const postHeader = document.createElement('div');
     postHeader.classList.add('post-header');
 
+    const headerLeft = document.createElement('div');
+    headerLeft.classList.add('header-left');
+
     const authorAvatar = document.createElement('img');
     authorAvatar.src = post.authorAvatar || 'default-avatar.png';
     authorAvatar.alt = post.author;
+    authorAvatar.classList.add('avatar');
 
-    const headerText = document.createElement('div');
+    const authorInfo = document.createElement('div');
+    authorInfo.classList.add('author-info');
 
+    const postAuthor = document.createElement('span');
+    postAuthor.classList.add('post-author');
+    postAuthor.textContent = post.author;
+
+    const dotSeparator = document.createElement('span');
+    dotSeparator.classList.add('dot-separator');
+    dotSeparator.textContent = '·';
+
+    const postTime = document.createElement('span');
+    postTime.classList.add('post-time');
+    postTime.textContent = formatTime(post.timestamp);
+
+    authorInfo.appendChild(postAuthor);
+    authorInfo.appendChild(dotSeparator);
+    authorInfo.appendChild(postTime);
+
+    headerLeft.appendChild(authorAvatar);
+    headerLeft.appendChild(authorInfo);
+
+    postHeader.appendChild(headerLeft);
+
+    // Post Title
     const postTitle = document.createElement('div');
     postTitle.classList.add('post-title');
     postTitle.textContent = post.title;
-
-    const postAuthor = document.createElement('div');
-    postAuthor.classList.add('post-author');
-    postAuthor.textContent = `Posted by ${post.author}`;
-
-    headerText.appendChild(postTitle);
-    headerText.appendChild(postAuthor);
-
-    postHeader.appendChild(authorAvatar);
-    postHeader.appendChild(headerText);
 
     // Post Content
     const postContent = document.createElement('div');
@@ -105,6 +122,12 @@ function createPostElement(post) {
     postActions.appendChild(upvoteButton);
     postActions.appendChild(downvoteButton);
 
+    // Assemble Post Section
+    postSection.appendChild(postHeader);
+    postSection.appendChild(postTitle);
+    postSection.appendChild(postContent);
+    postSection.appendChild(postActions);
+
     // Comments Section
     const postComments = document.createElement('div');
     postComments.classList.add('post-comments');
@@ -131,14 +154,30 @@ function createPostElement(post) {
     commentForm.appendChild(commentInput);
     commentForm.appendChild(submitCommentButton);
 
-    // Assemble Post Section
-    postSection.appendChild(postHeader);
-    postSection.appendChild(postContent);
-    postSection.appendChild(postActions);
     postSection.appendChild(postComments);
     postSection.appendChild(commentForm);
 
     return postSection;
+}
+
+// Function to format timestamp
+function formatTime(timestamp) {
+    const time = new Date(timestamp);
+    const now = new Date();
+    const diff = (now - time) / 1000; // Difference in seconds
+
+    if (diff < 60) {
+        return 'Just now';
+    } else if (diff < 3600) {
+        const minutes = Math.floor(diff / 60);
+        return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+    } else if (diff < 86400) {
+        const hours = Math.floor(diff / 3600);
+        return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+    } else {
+        const days = Math.floor(diff / 86400);
+        return `${days} day${days !== 1 ? 's' : ''} ago`;
+    }
 }
 
 // Function to submit a new post
@@ -246,23 +285,41 @@ function createCommentElement(comment, postId) {
     commentDiv.classList.add('comment');
     commentDiv.dataset.commentId = comment._id;
 
+    // Comment Header
+    const commentHeader = document.createElement('div');
+    commentHeader.classList.add('comment-header');
+
     const commenterAvatar = document.createElement('img');
     commenterAvatar.src = comment.authorAvatar || 'default-avatar.png';
     commenterAvatar.alt = comment.author;
+    commenterAvatar.classList.add('avatar');
 
-    const commentContent = document.createElement('div');
-    commentContent.classList.add('comment-content');
+    const commenterInfo = document.createElement('div');
+    commenterInfo.classList.add('commenter-info');
 
-    const commentAuthor = document.createElement('div');
+    const commentAuthor = document.createElement('span');
     commentAuthor.classList.add('comment-author');
     commentAuthor.textContent = comment.author;
 
+    const dotSeparator = document.createElement('span');
+    dotSeparator.classList.add('dot-separator');
+    dotSeparator.textContent = '·';
+
+    const commentTime = document.createElement('span');
+    commentTime.classList.add('comment-time');
+    commentTime.textContent = formatTime(comment.timestamp);
+
+    commenterInfo.appendChild(commentAuthor);
+    commenterInfo.appendChild(dotSeparator);
+    commenterInfo.appendChild(commentTime);
+
+    commentHeader.appendChild(commenterAvatar);
+    commentHeader.appendChild(commenterInfo);
+
+    // Comment Content
     const commentText = document.createElement('div');
     commentText.classList.add('comment-text');
     commentText.textContent = comment.content;
-
-    commentContent.appendChild(commentAuthor);
-    commentContent.appendChild(commentText);
 
     // Comment Actions
     const commentActions = document.createElement('div');
@@ -290,10 +347,10 @@ function createCommentElement(comment, postId) {
     commentActions.appendChild(upvoteButton);
     commentActions.appendChild(downvoteButton);
 
-    commentContent.appendChild(commentActions);
-
-    commentDiv.appendChild(commenterAvatar);
-    commentDiv.appendChild(commentContent);
+    // Assemble Comment Div
+    commentDiv.appendChild(commentHeader);
+    commentDiv.appendChild(commentText);
+    commentDiv.appendChild(commentActions);
 
     return commentDiv;
 }
