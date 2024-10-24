@@ -1,8 +1,10 @@
 /* styles.css */
+@import "~@fortawesome/fontawesome-free/css/all.min.css";
 
 /* Global Styles */
 * {
     box-sizing: border-box;
+
 }
 
 body {

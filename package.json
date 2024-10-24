@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/Chattermon/yalmu-server#readme",
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.6.0",
     "axios": "^1.7.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
