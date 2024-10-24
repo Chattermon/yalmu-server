@@ -85,24 +85,21 @@ function createPostElement(post) {
 
     const upvoteButton = document.createElement('button');
     upvoteButton.classList.add('vote-button', 'upvote-button');
-    upvoteButton.innerHTML = `<i class="far fa-thumbs-up"></i><span>${post.upvotes}</span>`;
+    upvoteButton.innerHTML = `<i class="${userVotes.posts[post._id] === 1 ? 'fas' : 'far'} fa-thumbs-up"></i><span>${post.upvotes}</span>`;
 
     const downvoteButton = document.createElement('button');
     downvoteButton.classList.add('vote-button', 'downvote-button');
-    downvoteButton.innerHTML = `<i class="far fa-thumbs-down"></i><span>${post.downvotes}</span>`;
+    downvoteButton.innerHTML = `<i class="${userVotes.posts[post._id] === -1 ? 'fas' : 'far'} fa-thumbs-down"></i><span>${post.downvotes}</span>`;
 
     // Attach event listeners after both buttons are defined
     upvoteButton.addEventListener('click', () => handlePostVote(post._id, 1, upvoteButton, downvoteButton));
     downvoteButton.addEventListener('click', () => handlePostVote(post._id, -1, upvoteButton, downvoteButton));
 
-    // Check if the user has already voted on this post
-    const postVote = userVotes.posts[post._id];
-    if (postVote === 1) {
+    // Apply 'voted' class if user has voted
+    if (userVotes.posts[post._id] === 1) {
         upvoteButton.classList.add('voted');
-        upvoteButton.querySelector('i').classList.replace('far', 'fas');
-    } else if (postVote === -1) {
+    } else if (userVotes.posts[post._id] === -1) {
         downvoteButton.classList.add('voted');
-        downvoteButton.querySelector('i').classList.replace('far', 'fas');
     }
 
     postActions.appendChild(upvoteButton);
@@ -273,24 +270,21 @@ function createCommentElement(comment, postId) {
 
     const upvoteButton = document.createElement('button');
     upvoteButton.classList.add('vote-button', 'upvote-button');
-    upvoteButton.innerHTML = `<i class="far fa-thumbs-up"></i><span>${comment.upvotes}</span>`;
+    upvoteButton.innerHTML = `<i class="${userVotes.comments[comment._id] === 1 ? 'fas' : 'far'} fa-thumbs-up"></i><span>${comment.upvotes}</span>`;
 
     const downvoteButton = document.createElement('button');
     downvoteButton.classList.add('vote-button', 'downvote-button');
-    downvoteButton.innerHTML = `<i class="far fa-thumbs-down"></i><span>${comment.downvotes}</span>`;
+    downvoteButton.innerHTML = `<i class="${userVotes.comments[comment._id] === -1 ? 'fas' : 'far'} fa-thumbs-down"></i><span>${comment.downvotes}</span>`;
 
     // Attach event listeners after both buttons are defined
     upvoteButton.addEventListener('click', () => handleCommentVote(postId, comment._id, 1, upvoteButton, downvoteButton));
     downvoteButton.addEventListener('click', () => handleCommentVote(postId, comment._id, -1, upvoteButton, downvoteButton));
 
-    // Check if the user has already voted on this comment
-    const commentVote = userVotes.comments[comment._id];
-    if (commentVote === 1) {
+    // Apply 'voted' class if user has voted
+    if (userVotes.comments[comment._id] === 1) {
         upvoteButton.classList.add('voted');
-        upvoteButton.querySelector('i').classList.replace('far', 'fas');
-    } else if (commentVote === -1) {
+    } else if (userVotes.comments[comment._id] === -1) {
         downvoteButton.classList.add('voted');
-        downvoteButton.querySelector('i').classList.replace('far', 'fas');
     }
 
     commentActions.appendChild(upvoteButton);
