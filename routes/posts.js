@@ -114,9 +114,9 @@ router.post('/:id/upvote', async (req, res) => {
 
     if (!post) return res.status(404).json({ message: 'Post not found.' });
 
-    if (!post.voters) post.voters = new Map();
+    if (!post.voters) post.voters = {};
 
-    const previousVote = post.voters.get(userId) || 0;
+    const previousVote = post.voters[userId] || 0;
 
     if (previousVote === 1) {
       return res.status(400).json({ message: 'You have already upvoted this post.' });
@@ -127,7 +127,7 @@ router.post('/:id/upvote', async (req, res) => {
     if (previousVote === -1) post.downvotes -= 1;
 
     // Record the vote
-    post.voters.set(userId, 1);
+    post.voters[userId] = 1;
     await post.save();
 
     res.json({ upvotes: post.upvotes, downvotes: post.downvotes });
@@ -145,9 +145,9 @@ router.post('/:id/downvote', async (req, res) => {
 
     if (!post) return res.status(404).json({ message: 'Post not found.' });
 
-    if (!post.voters) post.voters = new Map();
+    if (!post.voters) post.voters = {};
 
-    const previousVote = post.voters.get(userId) || 0;
+    const previousVote = post.voters[userId] || 0;
 
     if (previousVote === -1) {
       return res.status(400).json({ message: 'You have already downvoted this post.' });
@@ -158,7 +158,7 @@ router.post('/:id/downvote', async (req, res) => {
     if (previousVote === 1) post.upvotes -= 1;
 
     // Record the vote
-    post.voters.set(userId, -1);
+    post.voters[userId] = -1;
     await post.save();
 
     res.json({ upvotes: post.upvotes, downvotes: post.downvotes });
@@ -240,9 +240,9 @@ router.post('/:postId/comments/:commentId/upvote', async (req, res) => {
     const comment = post.comments.id(req.params.commentId);
     if (!comment) return res.status(404).json({ message: 'Comment not found.' });
 
-    if (!comment.voters) comment.voters = new Map();
+    if (!comment.voters) comment.voters = {};
 
-    const previousVote = comment.voters.get(userId) || 0;
+    const previousVote = comment.voters[userId] || 0;
 
     if (previousVote === 1) {
       return res.status(400).json({ message: 'You have already upvoted this comment.' });
@@ -253,7 +253,7 @@ router.post('/:postId/comments/:commentId/upvote', async (req, res) => {
     if (previousVote === -1) comment.downvotes -= 1;
 
     // Record the vote
-    comment.voters.set(userId, 1);
+    comment.voters[userId] = 1;
     await post.save();
 
     res.json({ upvotes: comment.upvotes, downvotes: comment.downvotes });
@@ -274,9 +274,9 @@ router.post('/:postId/comments/:commentId/downvote', async (req, res) => {
     const comment = post.comments.id(req.params.commentId);
     if (!comment) return res.status(404).json({ message: 'Comment not found.' });
 
-    if (!comment.voters) comment.voters = new Map();
+    if (!comment.voters) comment.voters = {};
 
-    const previousVote = comment.voters.get(userId) || 0;
+    const previousVote = comment.voters[userId] || 0;
 
     if (previousVote === -1) {
       return res.status(400).json({ message: 'You have already downvoted this comment.' });
@@ -287,7 +287,7 @@ router.post('/:postId/comments/:commentId/downvote', async (req, res) => {
     if (previousVote === 1) comment.upvotes -= 1;
 
     // Record the vote
-    comment.voters.set(userId, -1);
+    comment.voters[userId] = -1;
     await post.save();
 
     res.json({ upvotes: comment.upvotes, downvotes: comment.downvotes });

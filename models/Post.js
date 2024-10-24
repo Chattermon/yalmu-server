@@ -8,7 +8,7 @@ const CommentSchema = new mongoose.Schema({
   content: String,
   upvotes: { type: Number, default: 0 },
   downvotes: { type: Number, default: 0 },
-  voters: { type: Map, of: Number, default: {} }, // Stores user votes
+  voters: { type: Object, default: {} }, // Use Object instead of Map
   timestamp: { type: Date, default: Date.now },
 });
 
@@ -20,7 +20,7 @@ const PostSchema = new mongoose.Schema({
   authorAvatar: String,
   upvotes: { type: Number, default: 0 },
   downvotes: { type: Number, default: 0 },
-  voters: { type: Map, of: Number, default: {} }, // Stores user votes
+  voters: { type: Object, default: {} }, // Use Object instead of Map
   comments: [CommentSchema],
   timestamp: { type: Date, default: Date.now },
 });
