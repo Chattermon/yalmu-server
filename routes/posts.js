@@ -122,9 +122,14 @@ router.post('/:id/upvote', async (req, res) => {
       return res.status(400).json({ message: 'You have already upvoted this post.' });
     }
 
-    // Update votes
-    post.upvotes += 1;
-    if (previousVote === -1) post.downvotes -= 1;
+    if (previousVote === -1) {
+      // User is switching from downvote to upvote
+      post.downvotes -= 1;
+      post.upvotes += 1;
+    } else {
+      // User hasn't voted before
+      post.upvotes += 1;
+    }
 
     // Record the vote
     post.voters[userId] = 1;
@@ -153,9 +158,14 @@ router.post('/:id/downvote', async (req, res) => {
       return res.status(400).json({ message: 'You have already downvoted this post.' });
     }
 
-    // Update votes
-    post.downvotes += 1;
-    if (previousVote === 1) post.upvotes -= 1;
+    if (previousVote === 1) {
+      // User is switching from upvote to downvote
+      post.upvotes -= 1;
+      post.downvotes += 1;
+    } else {
+      // User hasn't voted before
+      post.downvotes += 1;
+    }
 
     // Record the vote
     post.voters[userId] = -1;
@@ -248,9 +258,14 @@ router.post('/:postId/comments/:commentId/upvote', async (req, res) => {
       return res.status(400).json({ message: 'You have already upvoted this comment.' });
     }
 
-    // Update votes
-    comment.upvotes += 1;
-    if (previousVote === -1) comment.downvotes -= 1;
+    if (previousVote === -1) {
+      // User is switching from downvote to upvote
+      comment.downvotes -= 1;
+      comment.upvotes += 1;
+    } else {
+      // User hasn't voted before
+      comment.upvotes += 1;
+    }
 
     // Record the vote
     comment.voters[userId] = 1;
@@ -282,9 +297,14 @@ router.post('/:postId/comments/:commentId/downvote', async (req, res) => {
       return res.status(400).json({ message: 'You have already downvoted this comment.' });
     }
 
-    // Update votes
-    comment.downvotes += 1;
-    if (previousVote === 1) comment.upvotes -= 1;
+    if (previousVote === 1) {
+      // User is switching from upvote to downvote
+      comment.upvotes -= 1;
+      comment.downvotes += 1;
+    } else {
+      // User hasn't voted before
+      comment.downvotes += 1;
+    }
 
     // Record the vote
     comment.voters[userId] = -1;

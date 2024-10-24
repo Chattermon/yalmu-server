@@ -86,11 +86,13 @@ function createPostElement(post) {
     const upvoteButton = document.createElement('button');
     upvoteButton.classList.add('vote-button', 'upvote-button');
     upvoteButton.innerHTML = `<i class="far fa-thumbs-up"></i><span>${post.upvotes}</span>`;
-    upvoteButton.addEventListener('click', () => handlePostVote(post._id, 1, upvoteButton, downvoteButton));
 
     const downvoteButton = document.createElement('button');
     downvoteButton.classList.add('vote-button', 'downvote-button');
     downvoteButton.innerHTML = `<i class="far fa-thumbs-down"></i><span>${post.downvotes}</span>`;
+
+    // Attach event listeners after both buttons are defined
+    upvoteButton.addEventListener('click', () => handlePostVote(post._id, 1, upvoteButton, downvoteButton));
     downvoteButton.addEventListener('click', () => handlePostVote(post._id, -1, upvoteButton, downvoteButton));
 
     // Check if the user has already voted on this post
@@ -183,8 +185,10 @@ async function submitPost() {
 
 // Handle Post Vote
 async function handlePostVote(postId, voteValue, upvoteButton, downvoteButton) {
-    if (userVotes.posts[postId]) {
-        alert('You have already voted on this post.');
+    const currentVote = userVotes.posts[postId] || 0;
+
+    if (currentVote === voteValue) {
+        alert(`You have already ${voteValue === 1 ? 'upvoted' : 'downvoted'} this post.`);
         return;
     }
 
@@ -199,12 +203,17 @@ async function handlePostVote(postId, voteValue, upvoteButton, downvoteButton) {
             upvoteButton.querySelector('span').textContent = data.upvotes;
             downvoteButton.querySelector('span').textContent = data.downvotes;
 
+            // Update buttons
             if (voteValue === 1) {
                 upvoteButton.classList.add('voted');
                 upvoteButton.querySelector('i').classList.replace('far', 'fas');
+                downvoteButton.classList.remove('voted');
+                downvoteButton.querySelector('i').classList.replace('fas', 'far');
             } else {
                 downvoteButton.classList.add('voted');
                 downvoteButton.querySelector('i').classList.replace('far', 'fas');
+                upvoteButton.classList.remove('voted');
+                upvoteButton.querySelector('i').classList.replace('fas', 'far');
             }
 
             // Save vote
@@ -265,11 +274,13 @@ function createCommentElement(comment, postId) {
     const upvoteButton = document.createElement('button');
     upvoteButton.classList.add('vote-button', 'upvote-button');
     upvoteButton.innerHTML = `<i class="far fa-thumbs-up"></i><span>${comment.upvotes}</span>`;
-    upvoteButton.addEventListener('click', () => handleCommentVote(postId, comment._id, 1, upvoteButton, downvoteButton));
 
     const downvoteButton = document.createElement('button');
     downvoteButton.classList.add('vote-button', 'downvote-button');
     downvoteButton.innerHTML = `<i class="far fa-thumbs-down"></i><span>${comment.downvotes}</span>`;
+
+    // Attach event listeners after both buttons are defined
+    upvoteButton.addEventListener('click', () => handleCommentVote(postId, comment._id, 1, upvoteButton, downvoteButton));
     downvoteButton.addEventListener('click', () => handleCommentVote(postId, comment._id, -1, upvoteButton, downvoteButton));
 
     // Check if the user has already voted on this comment
@@ -295,8 +306,10 @@ function createCommentElement(comment, postId) {
 
 // Handle Comment Vote
 async function handleCommentVote(postId, commentId, voteValue, upvoteButton, downvoteButton) {
-    if (userVotes.comments[commentId]) {
-        alert('You have already voted on this comment.');
+    const currentVote = userVotes.comments[commentId] || 0;
+
+    if (currentVote === voteValue) {
+        alert(`You have already ${voteValue === 1 ? 'upvoted' : 'downvoted'} this comment.`);
         return;
     }
 
@@ -311,12 +324,17 @@ async function handleCommentVote(postId, commentId, voteValue, upvoteButton, dow
             upvoteButton.querySelector('span').textContent = data.upvotes;
             downvoteButton.querySelector('span').textContent = data.downvotes;
 
+            // Update buttons
             if (voteValue === 1) {
                 upvoteButton.classList.add('voted');
                 upvoteButton.querySelector('i').classList.replace('far', 'fas');
+                downvoteButton.classList.remove('voted');
+                downvoteButton.querySelector('i').classList.replace('fas', 'far');
             } else {
                 downvoteButton.classList.add('voted');
                 downvoteButton.querySelector('i').classList.replace('far', 'fas');
+                upvoteButton.classList.remove('voted');
+                upvoteButton.querySelector('i').classList.replace('fas', 'far');
             }
 
             // Save vote
