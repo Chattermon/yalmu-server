@@ -12,12 +12,18 @@ function fakeAuth(req, res, next) {
 
 router.use(fakeAuth);
 
-// Get the current poll
+// Get the current active poll
 router.get('/', async (req, res) => {
   try {
-    const poll = await Poll.findOne().sort({ createdAt: -1 });
+    const now = new Date();
+
+    const poll = await Poll.findOne({
+      createdAt: { $lte: now },
+      expiresAt: { $gte: now },
+    }).sort({ createdAt: -1 });
+
     if (!poll) {
-      return res.status(404).json({ message: 'No poll available.' });
+      return res.status(404).json({ message: 'No active poll available.' });
     }
     res.json(poll);
   } catch (error) {
@@ -35,8 +41,13 @@ router.post('/:pollId/vote', async (req, res) => {
     const poll = await Poll.findById(req.params.pollId);
     if (!poll) return res.status(404).json({ message: 'Poll not found.' });
 
+    // Ensure that poll.voters is a Map
+    if (!(poll.voters instanceof Map)) {
+      poll.voters = new Map(Object.entries(poll.voters));
+    }
+
     // Check if user has already voted
-    if (poll.voters.get(userId) !== undefined) {
+    if (poll.voters.has(userId)) {
       return res.status(400).json({ message: 'You have already voted.' });
     }
 
@@ -52,18 +63,36 @@ router.post('/:pollId/vote', async (req, res) => {
     }
   } catch (error) {
     console.error('Error submitting vote:', error);
-    res.status(500).json({ message: 'Server Error' });
+    res.status(500).json({ message: 'Server Error', error: error.message });
   }
 });
 
-// Get poll results (optional)
-router.get('/:pollId/results', async (req, res) => {
+// Optional: Route to create a new poll (for testing purposes)
+router.post('/create', async (req, res) => {
+  const { question, options } = req.body;
+
+  if (!question || !options || !Array.isArray(options) || options.length === 0) {
+    return res.status(400).json({ message: 'Invalid poll data.' });
+  }
+
+  const pollOptions = options.map((optionText) => ({
+    text: optionText,
+    votes: 0,
+  }));
+
+  const newPoll = new Poll({
+    question,
+    options: pollOptions,
+    voters: new Map(),
+    createdAt: new Date(),
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Expires in one week
+  });
+
   try {
-    const poll = await Poll.findById(req.params.pollId);
-    if (!poll) return res.status(404).json({ message: 'Poll not found.' });
-    res.json(poll);
+    await newPoll.save();
+    res.status(201).json({ message: 'Poll created successfully.', poll: newPoll });
   } catch (error) {
-    console.error('Error fetching poll results:', error);
+    console.error('Error creating poll:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 });
