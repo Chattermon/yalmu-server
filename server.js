@@ -41,7 +41,7 @@ app.use('/api/polls', pollsRoute);
 
 // Serve index.html for the root route
 app.get('/', (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Real-Time Chat with Socket.io
