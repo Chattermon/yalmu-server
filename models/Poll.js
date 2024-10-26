@@ -10,9 +10,10 @@ const OptionSchema = new mongoose.Schema({
 const PollSchema = new mongoose.Schema({
   question: String,
   options: [OptionSchema],
-  voters: { type: Map, of: String }, // Map of user IDs to their selected option
+  voters: { type: Map, of: String, default: {} }, // Initialize with an empty map
   createdAt: { type: Date, default: Date.now },
-  expiresAt: Date, // If we want the poll to expire weekly
+  expiresAt: Date,
 });
 
-module.exports = mongoose.model('Poll', PollSchema);
+// Check if the model already exists to prevent OverwriteModelError
+module.exports = mongoose.models.Poll || mongoose.model('Poll', PollSchema);

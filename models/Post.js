@@ -1,18 +1,28 @@
-// models/Poll.js
-
+// models/Post.js
 const mongoose = require('mongoose');
 
-const OptionSchema = new mongoose.Schema({
-  text: String,
-  votes: { type: Number, default: 0 },
+// Schema for comments
+const CommentSchema = new mongoose.Schema({
+  author: String,
+  authorAvatar: String,
+  content: String,
+  upvotes: { type: Number, default: 0 },
+  downvotes: { type: Number, default: 0 },
+  voters: { type: Object, default: {} }, // Use Object instead of Map
+  timestamp: { type: Date, default: Date.now },
 });
 
-const PollSchema = new mongoose.Schema({
-  question: String,
-  options: [OptionSchema],
-  voters: { type: Map, of: String, default: {} }, // Initialize with an empty map
-  createdAt: { type: Date, default: Date.now },
-  expiresAt: Date,
+// Schema for posts
+const PostSchema = new mongoose.Schema({
+  title: String,
+  content: String,
+  author: String,
+  authorAvatar: String,
+  upvotes: { type: Number, default: 0 },
+  downvotes: { type: Number, default: 0 },
+  voters: { type: Object, default: {} }, // Use Object instead of Map
+  comments: [CommentSchema],
+  timestamp: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model('Poll', PollSchema);
+module.exports = mongoose.model('Post', PostSchema);

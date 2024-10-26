@@ -1,14 +1,14 @@
 // routes/posts.js
+
 const express = require('express');
 const router = express.Router();
-const Post = require('../models/Post');
 const axios = require('axios');
+const Post = require('../models/Post');
 
 // Middleware to simulate user authentication (replace with real auth in production)
 function fakeAuth(req, res, next) {
-  // Simulate a user ID (in a real app, you'd get this from the session or token)
-  // For simplicity, we're using the client's IP address as a unique identifier
-  req.userId = req.ip; // Note: This is not reliable for production use
+  // Sanitize the IP address to remove invalid characters
+  req.userId = req.ip.replace(/\./g, '_').replace(/:/g, '_');
   next();
 }
 
@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Submit a new post
+// Submit a new post with OpenAI Moderation
 router.post('/', async (req, res) => {
   const { title, content, author, authorAvatar } = req.body;
 
@@ -85,10 +85,15 @@ router.post('/', async (req, res) => {
       content,
       author,
       authorAvatar,
+      upvotes: 0,
+      downvotes: 0,
+      comments: [],
+      timestamp: new Date(),
+      voters: new Map(),
     });
 
     await newPost.save();
-    res.status(201).json(newPost);
+    res.status(201).json({ message: 'Post created successfully.', post: newPost });
   } catch (error) {
     console.error('Error submitting post:', error);
 
@@ -107,35 +112,33 @@ router.post('/', async (req, res) => {
 });
 
 // Upvote a post
-router.post('/:id/upvote', async (req, res) => {
-  try {
-    const userId = req.userId;
-    const post = await Post.findById(req.params.id);
+router.post('/:postId/upvote', async (req, res) => {
+  const userId = req.userId;
 
+  try {
+    const post = await Post.findById(req.params.postId);
     if (!post) return res.status(404).json({ message: 'Post not found.' });
 
-    if (!post.voters) post.voters = {};
+    // Ensure that post.voters is a Map
+    if (!(post.voters instanceof Map)) {
+      post.voters = new Map(Object.entries(post.voters));
+    }
 
-    const previousVote = post.voters[userId] || 0;
+    const previousVote = post.voters.get(userId) || 0;
 
     if (previousVote === 1) {
       return res.status(400).json({ message: 'You have already upvoted this post.' });
     }
 
     if (previousVote === -1) {
-      // User is switching from downvote to upvote
       post.downvotes -= 1;
-      post.upvotes += 1;
-    } else {
-      // User hasn't voted before
-      post.upvotes += 1;
     }
 
-    // Record the vote
-    post.voters[userId] = 1;
-    await post.save();
+    post.upvotes += 1;
+    post.voters.set(userId, 1);
 
-    res.json({ upvotes: post.upvotes, downvotes: post.downvotes });
+    await post.save();
+    res.json({ message: 'Upvoted successfully.', upvotes: post.upvotes, downvotes: post.downvotes });
   } catch (error) {
     console.error('Error upvoting post:', error);
     res.status(500).json({ message: 'Server Error' });
@@ -143,43 +146,41 @@ router.post('/:id/upvote', async (req, res) => {
 });
 
 // Downvote a post
-router.post('/:id/downvote', async (req, res) => {
-  try {
-    const userId = req.userId;
-    const post = await Post.findById(req.params.id);
+router.post('/:postId/downvote', async (req, res) => {
+  const userId = req.userId;
 
+  try {
+    const post = await Post.findById(req.params.postId);
     if (!post) return res.status(404).json({ message: 'Post not found.' });
 
-    if (!post.voters) post.voters = {};
+    // Ensure that post.voters is a Map
+    if (!(post.voters instanceof Map)) {
+      post.voters = new Map(Object.entries(post.voters));
+    }
 
-    const previousVote = post.voters[userId] || 0;
+    const previousVote = post.voters.get(userId) || 0;
 
     if (previousVote === -1) {
       return res.status(400).json({ message: 'You have already downvoted this post.' });
     }
 
     if (previousVote === 1) {
-      // User is switching from upvote to downvote
       post.upvotes -= 1;
-      post.downvotes += 1;
-    } else {
-      // User hasn't voted before
-      post.downvotes += 1;
     }
 
-    // Record the vote
-    post.voters[userId] = -1;
-    await post.save();
+    post.downvotes += 1;
+    post.voters.set(userId, -1);
 
-    res.json({ upvotes: post.upvotes, downvotes: post.downvotes });
+    await post.save();
+    res.json({ message: 'Downvoted successfully.', upvotes: post.upvotes, downvotes: post.downvotes });
   } catch (error) {
     console.error('Error downvoting post:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 });
 
-// Add a comment to a post
-router.post('/:id/comments', async (req, res) => {
+// Add a comment to a post with OpenAI Moderation
+router.post('/:postId/comments', async (req, res) => {
   const { author, authorAvatar, content } = req.body;
 
   if (!content || !author) {
@@ -208,28 +209,44 @@ router.post('/:id/comments', async (req, res) => {
       return res.status(400).json({ message: 'Comment content is inappropriate.' });
     }
 
-    const post = await Post.findById(req.params.id);
+    const post = await Post.findById(req.params.postId);
     if (!post) return res.status(404).json({ message: 'Post not found.' });
 
     const newComment = {
       author,
       authorAvatar,
       content,
+      upvotes: 0,
+      downvotes: 0,
+      timestamp: new Date(),
+      voters: new Map(),
     };
+
     post.comments.push(newComment);
     await post.save();
 
-    res.status(201).json(newComment);
+    res.status(201).json({ message: 'Comment added successfully.', comment: newComment });
   } catch (error) {
     console.error('Error adding comment:', error);
-    res.status(500).json({ message: 'Server Error' });
+
+    // Handle specific OpenAI API errors
+    if (error.response) {
+      console.error('OpenAI API Error:', error.response.data);
+      return res.status(502).json({ message: 'Error communicating with moderation service.' });
+    } else if (error.request) {
+      console.error('No response from OpenAI API:', error.request);
+      return res.status(502).json({ message: 'No response from moderation service.' });
+    } else {
+      console.error('Error setting up moderation request:', error.message);
+      return res.status(500).json({ message: 'Server Error' });
+    }
   }
 });
 
 // Get comments for a post
-router.get('/:id/comments', async (req, res) => {
+router.get('/:postId/comments', async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id).select('comments');
+    const post = await Post.findById(req.params.postId).lean();
     if (!post) return res.status(404).json({ message: 'Post not found.' });
 
     res.json(post.comments);
@@ -241,37 +258,35 @@ router.get('/:id/comments', async (req, res) => {
 
 // Upvote a comment
 router.post('/:postId/comments/:commentId/upvote', async (req, res) => {
-  try {
-    const userId = req.userId;
-    const post = await Post.findById(req.params.postId);
+  const userId = req.userId;
 
+  try {
+    const post = await Post.findById(req.params.postId);
     if (!post) return res.status(404).json({ message: 'Post not found.' });
 
     const comment = post.comments.id(req.params.commentId);
     if (!comment) return res.status(404).json({ message: 'Comment not found.' });
 
-    if (!comment.voters) comment.voters = {};
+    // Ensure that comment.voters is a Map
+    if (!(comment.voters instanceof Map)) {
+      comment.voters = new Map(Object.entries(comment.voters));
+    }
 
-    const previousVote = comment.voters[userId] || 0;
+    const previousVote = comment.voters.get(userId) || 0;
 
     if (previousVote === 1) {
       return res.status(400).json({ message: 'You have already upvoted this comment.' });
     }
 
     if (previousVote === -1) {
-      // User is switching from downvote to upvote
       comment.downvotes -= 1;
-      comment.upvotes += 1;
-    } else {
-      // User hasn't voted before
-      comment.upvotes += 1;
     }
 
-    // Record the vote
-    comment.voters[userId] = 1;
-    await post.save();
+    comment.upvotes += 1;
+    comment.voters.set(userId, 1);
 
-    res.json({ upvotes: comment.upvotes, downvotes: comment.downvotes });
+    await post.save();
+    res.json({ message: 'Comment upvoted successfully.', upvotes: comment.upvotes, downvotes: comment.downvotes });
   } catch (error) {
     console.error('Error upvoting comment:', error);
     res.status(500).json({ message: 'Server Error' });
@@ -280,37 +295,35 @@ router.post('/:postId/comments/:commentId/upvote', async (req, res) => {
 
 // Downvote a comment
 router.post('/:postId/comments/:commentId/downvote', async (req, res) => {
-  try {
-    const userId = req.userId;
-    const post = await Post.findById(req.params.postId);
+  const userId = req.userId;
 
+  try {
+    const post = await Post.findById(req.params.postId);
     if (!post) return res.status(404).json({ message: 'Post not found.' });
 
     const comment = post.comments.id(req.params.commentId);
     if (!comment) return res.status(404).json({ message: 'Comment not found.' });
 
-    if (!comment.voters) comment.voters = {};
+    // Ensure that comment.voters is a Map
+    if (!(comment.voters instanceof Map)) {
+      comment.voters = new Map(Object.entries(comment.voters));
+    }
 
-    const previousVote = comment.voters[userId] || 0;
+    const previousVote = comment.voters.get(userId) || 0;
 
     if (previousVote === -1) {
       return res.status(400).json({ message: 'You have already downvoted this comment.' });
     }
 
     if (previousVote === 1) {
-      // User is switching from upvote to downvote
       comment.upvotes -= 1;
-      comment.downvotes += 1;
-    } else {
-      // User hasn't voted before
-      comment.downvotes += 1;
     }
 
-    // Record the vote
-    comment.voters[userId] = -1;
-    await post.save();
+    comment.downvotes += 1;
+    comment.voters.set(userId, -1);
 
-    res.json({ upvotes: comment.upvotes, downvotes: comment.downvotes });
+    await post.save();
+    res.json({ message: 'Comment downvoted successfully.', upvotes: comment.upvotes, downvotes: comment.downvotes });
   } catch (error) {
     console.error('Error downvoting comment:', error);
     res.status(500).json({ message: 'Server Error' });

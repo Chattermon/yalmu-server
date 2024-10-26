@@ -6,7 +6,9 @@
     <title>Alluoo - Chat, Talk, and Hang Out</title>
     <link rel="icon" type="image/x-icon" href="/public/favicon.ico">
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <!-- Include Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,7 +27,7 @@
             <!-- Hamburger Icon for Mobile -->
             <i class="fas fa-bars hamburger-icon" id="hamburgerIcon"></i>
             <div class="logo">
-                <a href="index.html"><img src="sudal.svg" alt="Yalmu Logo"></a>
+                <a href="index.html"><img src="images/sudal.svg" alt="Alluoo Logo"></a>
             </div>
         </div>
         <div class="navbar-center">
@@ -47,19 +49,19 @@
         <div class="vertical-navbar">
             <h2>Your Clubs</h2>
             <a href="club1.html">
-                <img src="club1-icon.png" alt="Club 1">
+                <img src="images/club1-icon.png" alt="Club 1">
                 Club One
             </a>
             <a href="club2.html">
-                <img src="club2-icon.png" alt="Club 2">
+                <img src="images/club2-icon.png" alt="Club 2">
                 Club Two
             </a>
             <a href="club3.html">
-                <img src="club3-icon.png" alt="Club 3">
+                <img src="images/club3-icon.png" alt="Club 3">
                 Club Three
             </a>
             <!-- Add more clubs as needed -->
-            <a href="club3.html" class="add-club">
+            <a href="add-club.html" class="add-club">
                 <i class="fas fa-plus"></i>
                 Add Club
             </a>
@@ -71,32 +73,32 @@
         <!-- Vertical Navbar (Desktop) -->
         <div class="vertical-navbar vertical-navbar-desktop">
             <br>
-            <a href="club1.html">
-                <img id="spec" src="home.png" alt="Home">
+            <a href="index.html">
+                <img id="spec" src="images/home.png" alt="Home">
                 Home
             </a>
-            <a href="club2.html">
-                <img id="spec" src="bar-chart.png" alt="Popular">
+            <a href="popular.html">
+                <img id="spec" src="images/bar-chart.png" alt="Popular">
                 Popular
             </a>
-            <a href="club3.html">
-                <img id="spec" src="puzzle.png" alt="All">
+            <a href="all.html">
+                <img id="spec" src="images/puzzle.png" alt="All">
                 All
             </a>
 
             <div class="divider"></div>
 
             <h2>FAVORITES</h2>
-            <a href="club1.html">
-                <img src="Unknown.jpeg" alt="TestGroup">
+            <a href="testgroup.html">
+                <img src="images/Unknown.jpeg" alt="TestGroup">
                 TestGroup
             </a>
-            <a href="club2.html">
-                <img src="Unknown.jpeg" alt="JacobGroup">
+            <a href="jacobgroup.html">
+                <img src="images/Unknown.jpeg" alt="JacobGroup">
                 JacobGroup
             </a>
-            <a href="club3.html">
-                <img src="Unknown.jpeg" alt="ThirdClub">
+            <a href="thirdclub.html">
+                <img src="images/Unknown.jpeg" alt="ThirdClub">
                 ThirdClub
             </a>
 
@@ -104,28 +106,28 @@
 
             <h2>CLUBS</h2>
             <div class="special">
-                <a href="club3.html" type="special">
-                    <img src="plus.png" alt="Add Clubs">
+                <a href="add-club.html">
+                    <img src="images/plus.png" alt="Add Clubs">
                     Add Clubs
                 </a>
             </div>
             <div class="special">
-                <a href="club3.html" type="special">
-                    <img src="plus.png" alt="Make a Club">
+                <a href="make-club.html">
+                    <img src="images/plus.png" alt="Make a Club">
                     Make a Club
                 </a>
             </div>
 
-            <a href="club1.html">
-                <img src="Unknown.jpeg" alt="TestGroup">
+            <a href="testgroup.html">
+                <img src="images/Unknown.jpeg" alt="TestGroup">
                 TestGroup
             </a>
-            <a href="club2.html">
-                <img src="Unknown.jpeg" alt="JacobGroup">
+            <a href="jacobgroup.html">
+                <img src="images/Unknown.jpeg" alt="JacobGroup">
                 JacobGroup
             </a>
-            <a href="club3.html">
-                <img src="Unknown.jpeg" alt="ThirdClub">
+            <a href="thirdclub.html">
+                <img src="images/Unknown.jpeg" alt="ThirdClub">
                 ThirdClub
             </a>
             <!-- Add more clubs as needed -->
@@ -138,7 +140,7 @@
                 <div class="header">
                     <h2>Create a New Post in</h2>
                     <h2 id="club">
-                        <img id="clubimg" src="Unknown.jpeg" alt="Club">
+                        <img id="clubimg" src="images/Unknown.jpeg" alt="Club">
                         a/home
                     </h2>
                 </div>
@@ -149,28 +151,24 @@
                 <button id="warn">Please abide by the rules of our community. Click here to learn more.</button>
             </div>
 
-
-
             <!-- Under the post form -->
-<div id="pollButtonContainer">
-    <img id="pollButton" src="poll1.png" alt="Weekly Poll" />
-  </div>
-  
-  <!-- Poll Popup -->
-  <div id="pollPopup" class="poll-popup">
-    <div class="poll-popup-content">
-      <span id="closePollPopup" class="close-poll-popup">&times;</span>
-      <div id="pollContent">
-        <h2 id="pollQuestion"></h2>
-        <div id="pollOptions"></div>
-      </div>
-      <div id="pollMessage" style="display: none;">
-        <p>Thanks for voting!</p>
-      </div>
-    </div>
-  </div>
-  
+            <div id="pollButtonContainer">
+                <img id="pollButton" src="images/poll1.png" alt="Weekly Poll" />
+            </div>
 
+            <!-- Poll Popup -->
+            <div id="pollPopup" class="poll-popup">
+                <div class="poll-popup-content">
+                    <span id="closePollPopup" class="close-poll-popup">&times;</span>
+                    <div id="pollContent">
+                        <h2 id="pollQuestion"></h2>
+                        <div id="pollOptions"></div>
+                    </div>
+                    <div id="pollMessage" style="display: none;">
+                        <p>Thanks for voting!</p>
+                    </div>
+                </div>
+            </div>
 
             <!-- Container to Display Posts -->
             <div id="postsContainer">

@@ -13,12 +13,7 @@ dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: '*', // Update with your frontend URL in production
-    methods: ['GET', 'POST'],
-  },
-});
+const io = new Server(server);
 
 // Middleware
 app.use(cors());
@@ -44,9 +39,9 @@ const pollsRoute = require('./routes/polls');
 app.use('/api/posts', postsRoute);
 app.use('/api/polls', pollsRoute);
 
-// Serve index.html for all other routes (Single Page Applications)
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
+// Serve index.html for the root route
+app.get('/', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'index.html'));
 });
 
 // Real-Time Chat with Socket.io
@@ -55,8 +50,8 @@ io.on('connection', (socket) => {
 
   // Listen for chat messages
   socket.on('chatMessage', (msg) => {
-    // Broadcast the message to all clients
-    socket.broadcast.emit('chatMessage', msg);
+    // Broadcast the message to all connected clients
+    io.emit('chatMessage', msg);
   });
 
   // Handle disconnection

@@ -13,8 +13,6 @@ document.getElementById('submitPost').addEventListener('click', submitPost);
 // Fetch and display existing posts on page load
 window.onload = function () {
   fetchPosts();
-  // Optionally, load the poll when the page loads
-  // loadPoll();
 };
 
 // Store user votes in localStorage
@@ -502,6 +500,7 @@ function createChatMessageElement(message) {
   const userIcon = document.createElement('img');
   userIcon.src = isOwnMessage ? window.userAvatar : message.avatar;
   userIcon.alt = isOwnMessage ? 'You' : message.author;
+  userIcon.classList.add('avatar');
 
   const messageContent = document.createElement('div');
   messageContent.classList.add('message-content');

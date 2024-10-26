@@ -6,7 +6,8 @@ const Poll = require('../models/Poll');
 
 // Middleware to simulate user authentication (replace with real auth in production)
 function fakeAuth(req, res, next) {
-  req.userId = req.ip;
+  // Sanitize the IP address to remove invalid characters
+  req.userId = req.ip.replace(/\./g, '_').replace(/:/g, '_');
   next();
 }
 
@@ -69,7 +70,7 @@ router.post('/:pollId/vote', async (req, res) => {
 
 // Optional: Route to create a new poll (for testing purposes)
 router.post('/create', async (req, res) => {
-  const { question, options } = req.body;
+  const { question, options, expiresAt } = req.body;
 
   if (!question || !options || !Array.isArray(options) || options.length === 0) {
     return res.status(400).json({ message: 'Invalid poll data.' });
@@ -85,7 +86,7 @@ router.post('/create', async (req, res) => {
     options: pollOptions,
     voters: new Map(),
     createdAt: new Date(),
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Expires in one week
+    expiresAt: expiresAt ? new Date(expiresAt) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Expires in one week by default
   });
 
   try {
