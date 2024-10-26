@@ -11,14 +11,24 @@ window.userAvatar = window.userAvatar || 'https://i.pravatar.cc/40?u=' + window.
 document.getElementById('submitPost').addEventListener('click', submitPost);
 
 // Fetch and display existing posts on page load
-window.onload = fetchPosts;
+window.onload = function () {
+    fetchPosts();
+    // Optionally, load the poll when the page loads
+    // loadPoll();
+};
 
 // Store user votes in localStorage
 let userVotes = JSON.parse(localStorage.getItem('userVotes')) || { posts: {}, comments: {} };
+let pollUserVotes = JSON.parse(localStorage.getItem('pollVotes')) || {};
 
-// Function to update localStorage
+// Function to update localStorage for post and comment votes
 function saveUserVotes() {
     localStorage.setItem('userVotes', JSON.stringify(userVotes));
+}
+
+// Function to update localStorage for poll votes
+function savePollUserVotes() {
+    localStorage.setItem('pollVotes', JSON.stringify(pollUserVotes));
 }
 
 // Function to fetch and display existing posts
@@ -514,22 +524,22 @@ function createChatMessageElement(message) {
 }
 
 // Event listeners for send buttons
-document.getElementById('sendButton').addEventListener('click', function() {
+document.getElementById('sendButton').addEventListener('click', function () {
     sendMessage(document.getElementById('chatInput'));
 });
 
-document.getElementById('sendButtonPopup').addEventListener('click', function() {
+document.getElementById('sendButtonPopup').addEventListener('click', function () {
     sendMessage(document.getElementById('chatInputPopup'));
 });
 
 // Event listeners for Enter key
-document.getElementById('chatInput').addEventListener('keypress', function(e) {
+document.getElementById('chatInput').addEventListener('keypress', function (e) {
     if (e.key === 'Enter') {
         sendMessage(document.getElementById('chatInput'));
     }
 });
 
-document.getElementById('chatInputPopup').addEventListener('keypress', function(e) {
+document.getElementById('chatInputPopup').addEventListener('keypress', function (e) {
     if (e.key === 'Enter') {
         sendMessage(document.getElementById('chatInputPopup'));
     }
@@ -539,20 +549,20 @@ document.getElementById('chatInputPopup').addEventListener('keypress', function(
 const chatButton = document.getElementById('chatButton');
 const chatPopup = document.getElementById('chatPopup');
 
-chatButton.addEventListener('click', function(event) {
+chatButton.addEventListener('click', function (event) {
     event.stopPropagation();
     chatPopup.style.display = chatPopup.style.display === 'flex' ? 'none' : 'flex';
 });
 
 // Close chat popup when clicking outside
-document.addEventListener('click', function(event) {
+document.addEventListener('click', function (event) {
     if (!chatPopup.contains(event.target) && !chatButton.contains(event.target)) {
         chatPopup.style.display = 'none';
     }
 });
 
 // Prevent clicks inside chat popup from closing it
-chatPopup.addEventListener('click', function(event) {
+chatPopup.addEventListener('click', function (event) {
     event.stopPropagation();
 });
 
@@ -560,19 +570,154 @@ chatPopup.addEventListener('click', function(event) {
 const hamburgerIcon = document.getElementById('hamburgerIcon');
 const verticalNavbarContainer = document.getElementById('verticalNavbarContainer');
 
-hamburgerIcon.addEventListener('click', function(event) {
+hamburgerIcon.addEventListener('click', function (event) {
     event.stopPropagation();
     verticalNavbarContainer.style.display = verticalNavbarContainer.style.display === 'block' ? 'none' : 'block';
 });
 
 // Close vertical navbar when clicking outside
-document.addEventListener('click', function(event) {
+document.addEventListener('click', function (event) {
     if (!verticalNavbarContainer.contains(event.target) && !hamburgerIcon.contains(event.target)) {
         verticalNavbarContainer.style.display = 'none';
     }
 });
 
 // Prevent clicks inside vertical navbar from closing it
-verticalNavbarContainer.addEventListener('click', function(event) {
+verticalNavbarContainer.addEventListener('click', function (event) {
     event.stopPropagation();
 });
+
+// -----------------------------------
+// Poll Functionality
+// -----------------------------------
+
+// Event listener for the poll button
+document.getElementById('pollButton').addEventListener('click', openPollPopup);
+
+// Event listener for the close button in the poll popup
+document.getElementById('closePollPopup').addEventListener('click', closePollPopup);
+
+// Function to open the poll popup
+function openPollPopup() {
+    document.getElementById('pollPopup').style.display = 'block';
+    // Load the poll
+    loadPoll();
+}
+
+// Function to close the poll popup
+function closePollPopup() {
+    document.getElementById('pollPopup').style.display = 'none';
+}
+
+// Close the poll popup when clicking outside of it
+window.addEventListener('click', function (event) {
+    const pollPopup = document.getElementById('pollPopup');
+    if (event.target == pollPopup) {
+        pollPopup.style.display = 'none';
+    }
+});
+
+// Function to load the poll
+async function loadPoll() {
+    try {
+        const response = await fetch('/api/polls');
+        if (response.ok) {
+            const poll = await response.json();
+            displayPoll(poll);
+        } else {
+            const error = await response.json();
+            console.error('Error fetching poll:', error.message);
+        }
+    } catch (error) {
+        console.error('Error fetching poll:', error);
+    }
+}
+
+// Function to display the poll
+function displayPoll(poll) {
+    const pollQuestion = document.getElementById('pollQuestion');
+    const pollOptionsContainer = document.getElementById('pollOptions');
+    const pollMessage = document.getElementById('pollMessage');
+    const pollContent = document.getElementById('pollContent');
+
+    pollQuestion.textContent = poll.question;
+    pollOptionsContainer.innerHTML = '';
+    pollMessage.style.display = 'none';
+    pollContent.style.display = 'block';
+
+    // Check if user has already voted
+    const hasVoted = pollUserVotes[poll._id] !== undefined;
+
+    poll.options.forEach((option, index) => {
+        const optionDiv = document.createElement('div');
+        optionDiv.classList.add('poll-option');
+        if (hasVoted) {
+            optionDiv.classList.add('disabled');
+            if (pollUserVotes[poll._id] === index) {
+                optionDiv.classList.add('selected');
+            }
+        }
+        optionDiv.dataset.optionIndex = index;
+
+        const optionText = document.createElement('span');
+        optionText.classList.add('option-text');
+        optionText.textContent = option.text;
+
+        const optionVotes = document.createElement('span');
+        optionVotes.classList.add('option-votes');
+        if (hasVoted) {
+            optionVotes.textContent = `${option.votes} votes`;
+        } else {
+            optionVotes.textContent = '';
+        }
+
+        optionDiv.appendChild(optionText);
+        optionDiv.appendChild(optionVotes);
+
+        if (!hasVoted) {
+            optionDiv.addEventListener('click', () => submitPollVote(poll._id, index));
+        }
+
+        pollOptionsContainer.appendChild(optionDiv);
+    });
+}
+
+// Function to submit poll vote
+async function submitPollVote(pollId, optionIndex) {
+    try {
+        const response = await fetch(`/api/polls/${pollId}/vote`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ optionIndex }),
+        });
+
+        if (response.ok) {
+            // Save the vote in localStorage
+            pollUserVotes[pollId] = optionIndex;
+            savePollUserVotes();
+
+            // Display thank you message and close popup after some time
+            const pollMessage = document.getElementById('pollMessage');
+            const pollContent = document.getElementById('pollContent');
+            pollContent.style.display = 'none';
+            pollMessage.style.display = 'block';
+
+            // Reload the poll to show updated results
+            loadPoll();
+
+            setTimeout(() => {
+                closePollPopup();
+            }, 2000);
+        } else {
+            const error = await response.json();
+            console.error('Error submitting vote:', error.message);
+            alert('Error: ' + error.message);
+        }
+    } catch (error) {
+        console.error('Error submitting vote:', error);
+    }
+}
+
+// -----------------------------------
+// End of app.js
+// -----------------------------------

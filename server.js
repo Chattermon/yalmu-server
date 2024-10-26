@@ -36,9 +36,13 @@ mongoose
   .then(() => console.log('MongoDB connected'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
-// Routes
+
+//Routes
 const postsRoute = require('./routes/posts');
+const pollsRoute = require('./routes/polls');
+
 app.use('/api/posts', postsRoute);
+app.use('/api/polls', pollsRoute);
 
 // Serve index.html for all other routes (Single Page Applications)
 app.get('*', (req, res) => {
