@@ -4,19 +4,22 @@
 async function fetchPosts() {
     try {
       const response = await fetch('/admin/posts');
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+      if (response.ok) {
+        const posts = await response.json();
+        displayPosts(posts);
+      } else {
+        console.error('Failed to fetch posts:', response.statusText);
+        document.getElementById('postsContainer').innerHTML =
+          '<p class="error">Error fetching posts.</p>';
       }
-      const posts = await response.json();
-      displayPosts(posts);
     } catch (error) {
       console.error('Error fetching posts:', error);
       document.getElementById('postsContainer').innerHTML =
-        '<p class="error-message">Error loading posts.</p>';
+        '<p class="error">Error fetching posts.</p>';
     }
   }
   
-  // Function to display posts in the admin dashboard
+  // Function to display posts in the UI
   function displayPosts(posts) {
     const postsContainer = document.getElementById('postsContainer');
     postsContainer.innerHTML = '';
@@ -76,19 +79,22 @@ async function fetchPosts() {
   async function fetchPolls() {
     try {
       const response = await fetch('/admin/polls');
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+      if (response.ok) {
+        const polls = await response.json();
+        displayPolls(polls);
+      } else {
+        console.error('Failed to fetch polls:', response.statusText);
+        document.getElementById('pollsContainer').innerHTML =
+          '<p class="error">Error fetching polls.</p>';
       }
-      const polls = await response.json();
-      displayPolls(polls);
     } catch (error) {
       console.error('Error fetching polls:', error);
       document.getElementById('pollsContainer').innerHTML =
-        '<p class="error-message">Error loading polls.</p>';
+        '<p class="error">Error fetching polls.</p>';
     }
   }
   
-  // Function to display polls in the admin dashboard
+  // Function to display polls in the UI
   function displayPolls(polls) {
     const pollsContainer = document.getElementById('pollsContainer');
     pollsContainer.innerHTML = '';
@@ -108,7 +114,7 @@ async function fetchPosts() {
       const optionsList = document.createElement('ul');
       poll.options.forEach((option) => {
         const optionItem = document.createElement('li');
-        optionItem.textContent = `${option.option}: ${option.votes} votes`;
+        optionItem.textContent = `${option.option || option.text}: ${option.votes} votes`;
         optionsList.appendChild(optionItem);
       });
   
