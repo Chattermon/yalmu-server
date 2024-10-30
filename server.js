@@ -7,8 +7,6 @@ const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
-const session = require('express-session');
-const MongoStore = require('connect-mongo');
 
 // Load environment variables
 dotenv.config();
@@ -20,18 +18,6 @@ const io = new Server(server);
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Session Middleware
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }),
-    cookie: { secure: false }, // Set to true if using HTTPS
-  })
-);
 
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
@@ -49,11 +35,9 @@ mongoose
 // Routes
 const postsRoute = require('./routes/posts');
 const pollsRoute = require('./routes/polls');
-const adminRoute = require('./routes/admin');
 
 app.use('/api/posts', postsRoute);
 app.use('/api/polls', pollsRoute);
-app.use('/admin', adminRoute);
 
 // Serve index.html for the root route
 app.get('/', (req, res) => {
@@ -76,6 +60,5 @@ io.on('connection', (socket) => {
   });
 });
 
-// Start the server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
